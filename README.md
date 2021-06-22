@@ -30,7 +30,7 @@ A page is then rendered with the selected image, and a row of similar images ben
 | *Similar Images* |
 
 ## AWS Implementation
-The AWS services used and their connections for creating the application are shown below.<sup>2,3</sup> In the process of building this application, listed below are facets of AWS that I began to develop familiarity with:
+The AWS services used and their connections for creating the application are shown <a href="images/diagram.pdf">here</a>.<sup>2,3</sup> In the process of building this application, listed below are facets of AWS that I began to develop familiarity with:
 
 - S3 bucket permissions: Only the bucket hosting the website is accessible to the public
 - Sizing compute:
@@ -40,12 +40,6 @@ The AWS services used and their connections for creating the application are sho
 - IAM roles and policies:
 	- The Lambda function and EC2 instance were given roles with policies attached to access other AWS services
 	- I need to explore further how S3 bucket policies and IAM policies work together
-
-<object data="images/diagram.pdf" type="application/pdf" width="700px">
-    <embed src="iamges/diagram.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="images/diagram.pdf">Download PDF</a>.</p>
-    </embed>
-</object>
 
 1. https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-photos-view.html
 2. https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/using-lambda-functions.html
