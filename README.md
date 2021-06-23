@@ -10,7 +10,7 @@ The homepage lists a set of albums containing images grouped by type from which 
 |:--:| 
 | *Home* |
 
-Selecting an album (e.g. marble) will render a page with images that belong in the selected album. The user can then select the number of desired similar images (i.e. *k*) from a drop-down menu and then select the image on which to perform visual search. The values of *k* that are allowed ranges from 1 to 10.
+Selecting an album (e.g. marble) will render a page with images that belong in the selected album. The user can then select the number of desired similar images (i.e. *k*) from a drop-down menu and then select the image on which to perform visual search. The values of *k* that are allowed range from 1 to 10.
 
 | ![album.jpg](images/album.png) | 
 |:--:| 
@@ -29,17 +29,6 @@ A page is then rendered with the selected image, and a row of similar images ben
 |:--:| 
 | *Similar Images* |
 
-The Lambda run time seems dependent on *k*, based on several runs:
-
-| Trial | *k* | Download Key | SSH into EC2 | Download Selected Image from S3 | Load Hash Table, Featurize Image, Hash Search | Upload Results | Total Time |
-|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| 
-| 1 | 1 | 3.5s | 0.5s | 1s | 6s | 1.5s | 12s |
-| 2 | 10 | 0.5s | 0.15s | 1s | 6s | 7.8s | 15.5s |
-| 3 | 20 | 0.5s | 0.2s | 1s | 6s | 17.6s | 25s |
-| 4 | 1 | 0.5s | 0.2s | 1s | 6s | 1.5s | 9.5s |
-| 5 | 10 | 3.2s | 0.2s | 1s | 6s | 8.5s | 19s |  
-
-
 ## AWS Implementation
 The AWS services used and their connections for creating the application are shown <a href="images/diagram.pdf">here</a>.<sup>2,3</sup> In the process of building this application, listed below are facets of AWS that I began to develop familiarity with:
 
@@ -56,6 +45,22 @@ The AWS services used and their connections for creating the application are sho
 My initial approach had been to use SageMaker and run a k-NN algorithm,<sup>4</sup> but I then decided that the application needed to give the user flexibility for choosing *k* without having to retrain the k-NN model. So I kept the portion of a pretrained ResNet-50 model imported from MXNet that performs feature extraction, and fed the extracted features through a locality sensitive hashing algorithm.<sup>5,6</sup> The hash table of approximately 30,000 images was saved to a pickle file (530 MB). Parameters for feature extraction were also saved (90 MB) to be used later.
 
 The hash table, feature extraction parameters, and python script that extracts features from an input image and queries the hash table with the extracted features were uploaded to the EC2 instance, which was used by the Lambda function to perform the search.
+
+## Performance
+The Lambda run time seems dependent on *k*, based on several runs:
+
+| Trial | *k* | Download Key | SSH into EC2 | Download Selected Image from S3 | Load Hash Table, Featurize Image, Hash Search | Upload Results | Total Time |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| 
+| 1 | 1 | 3.5s | 0.5s | 1s | 6s | 1.5s | 12s |
+| 2 | 10 | 0.5s | 0.15s | 1s | 6s | 7.8s | 15.5s |
+| 3 | 20 | 0.5s | 0.2s | 1s | 6s | 17.6s | 25s |
+| 4 | 1 | 0.5s | 0.2s | 1s | 6s | 1.5s | 9.5s |
+| 5 | 10 | 3.2s | 0.2s | 1s | 6s | 8.5s | 19s |
+
+Observations for run times for some of the columns are as follows:
+
+#### Download Key
+The Lambda function once triggered by an image selection downloads a key to SSH into the EC2 instance. The run times are longer for Trials 1 and 5. I believe this has to do with fact that the Lambda function starts from a cold state. This is not always the case if the Lambda function was triggered initially as shown by Trials 2 through 4. Trial 5 was triggered after some lag -- how long the Lambda function waits before going cold again is something I have to inspect further.
 
 ## References
 1. https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-photos-view.html
