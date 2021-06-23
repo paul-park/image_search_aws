@@ -1,7 +1,7 @@
 # Image Search Deployment with AWS
 
 ## Introduction
-Using various AWS services, I built a JavaScript web application hosted on S3 to perform visual search of an image and return *k* most similar images from a set of approximately 30,000 images.
+Using various AWS services, I built a [JavaScript web application hosted on S3](http://image-search-public.s3-website-us-east-1.amazonaws.com/) to perform search of an image and return *k* most similar images from a set of approximately 30,000 images.
 
 ## Walk-Through
 The homepage lists a set of albums containing images grouped by type from which to pick the image for visual search.<sup>1</sup>
@@ -55,7 +55,7 @@ The AWS services used and their connections for creating the application are sho
 ## Visual Search
 My initial approach had been to use SageMaker and run a k-NN algorithm,<sup>4</sup> but I then decided that the application needed to give the user flexibility for choosing *k* without having to retrain the k-NN model. So I kept the portion of a pretrained ResNet-50 model imported from MXNet that performs feature extraction, and fed the extracted features through a locality sensitive hashing algorithm.<sup>5,6</sup> The hash table of approximately 30,000 images was saved to a pickle file (530 MB). Parameters for feature extraction were also saved (90 MB) to be used later.
 
-The hash table, feature extraction paramters, and python script that extracts features from an input image and queries the hash table with the extracted features were uploaded to the EC2 instance, which was used by the Lambda function to perform the search.
+The hash table, feature extraction parameters, and python script that extracts features from an input image and queries the hash table with the extracted features were uploaded to the EC2 instance, which was used by the Lambda function to perform the search.
 
 ## References
 1. https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-photos-view.html
