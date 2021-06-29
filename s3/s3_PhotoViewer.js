@@ -37,7 +37,7 @@
 //   Replace BUCKET_NAME with the bucket name.
 //
 //var albumBucketName = 'visual-search-public';
-var albumBucketName = 'visual-search-pp';
+var albumBucketName = 'iamge-search-repository';
 
 // **DO THIS**:
 //   Replace this block of code with the sample code located at:
@@ -134,7 +134,7 @@ async function viewClosest(photoInputUrl, k, albumName) {
   // launch lambda function to ssh into ec2
   // Call the Lambda function to collect the spin results
   var lambdaParams = {
-    FunctionName : 'visual_search_function',
+    FunctionName : 'image_search_function',
     InvocationType : 'RequestResponse',
     LogType : 'None',
     Payload : JSON.stringify({photoUrl:photoInputUrl, photoName:photoInputName, k:k})

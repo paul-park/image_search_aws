@@ -61,7 +61,7 @@ print('{0:.3f}s elapsed to load hash table'.format(time.time()-s), file=sys.stde
 def main():
     fp = sys.argv[1]
     k = int(sys.argv[2])
-#    print(fp.split('/')[-1].split('.')[0])
+    print(fp.split('/')[-1].split('.')[0])
     s = time.time()
     img = get_image(fp)
     print('{0:.3f}s elapsed to load image'.format(time.time()-s), file=sys.stderr)

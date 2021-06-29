@@ -32,14 +32,70 @@ A page is then rendered with the selected image, and a row of similar images ben
 ## AWS Implementation
 The AWS services used and their connections for creating the application are shown <a href="images/diagram.pdf">here</a>.<sup>2,3</sup> In the process of building this application, listed below are facets of AWS that I began to develop familiarity with:
 
-- S3 bucket permissions: Only the bucket hosting the website is accessible to the public
+- S3 bucket permissions, IAM roles and policies:
+	- Only the bucket hosting the website is accessible to the public
+	- The bucket containing all images is kept private
+	- The bucket containing the key for the SSH connection to the EC2 instance is also kept private
+	- The EC2 instance needs a service role that allows it to:
+		- List and Get images from the private bucket
+		- List, Put, and Delete images in the public bucket
+	- The private bucket must also have a bucket policy creating an exception for the EC2 instance with the aforementioned service role to Get images from the private bucket
+	- The Lambda fuction is assigned a service role that allows it to get the key to SSH connect to the EC2 instance
+		- The private bucket containing the key did not need a bucket policy to create an exception unlike the other private bucket with images
+	- I need to explore further how S3 bucket policies and IAM policies work together
 - Sizing compute:
 	- Through trial and error, I determined that the t3.medium instance had the specs necessary for performing search; an 8 GB EBS volume is attached to it
 	- I wanted the cheapest instance possible for accomplishing the task
 	- t3.nano, t3.micro, and t3.small would exit with errors; I am under the impression that memory size was an issue
-- IAM roles and policies:
-	- The Lambda function and EC2 instance were given roles with policies attached to access other AWS services
-	- I need to explore further how S3 bucket policies and IAM policies work together
+
+### A Note on IAM Policy and S3 Bucket Policy
+I wonder whether the difference in the result of the IAM policies attached to the service roles for the EC2 and Lambda (recall that the private bucket for images required an exception to its bucket policy to allow the EC2 to get images while the private bucket containing the key did not for Lambda) stemmed from how I wrote the policy in JSON. Consider the following:
+
+Policy for EC2 service role:
+```json
+{
+    "Effect": "Allow",
+    "Action": [
+        "s3:Get*",
+        "s3:List*"
+    ],
+    "Resource": "arn:aws:s3:::{PRIVATE_IMAGE_BUCKET}"
+}
+```
+
+Bucket policy for *PRIVATE_IMAGE_BUCKET*:
+```json
+{
+    "Sid": "GetForEC2",
+    "Effect": "Allow",
+    "Principal": {
+        "AWS": "arn:aws:iam::{ACCOUNT}:role/{EC2_ROLE}"
+    },
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::{PRIVATE_IMAGE_BUCKET}/geological_train/*"
+}
+```
+
+Policy for Lambda service role:
+```json
+{
+    "Effect": "Allow",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::{PRIVATE_KEY_BUCKET/KEY.pem}"
+}
+```
+
+The policy for the Lambda service role is much more specific than that of the EC2 service role. Policies attached to service roles that try to access private buckets might need to be more specific to hold precedence over the explicit denys established by the bucket being private. So with the following update, we might not need the bucket policy anymore:
+```json
+{
+    "Effect": "Allow",
+    "Action": [
+        "s3:Get*",
+        "s3:List*"
+    ],
+    "Resource": "arn:aws:s3:::{PRIVATE_IMAGE_BUCKET}/gelogical_train/*"
+}
+```
 
 ## Visual Search
 My initial approach had been to use SageMaker and run a k-NN algorithm,<sup>4</sup> but I then decided that the application needed to give the user flexibility for choosing *k* without having to retrain the k-NN model. So I kept the portion of a pretrained ResNet-50 model imported from MXNet that performs feature extraction, and fed the extracted features through a locality sensitive hashing (LSH) algorithm.<sup>5,6</sup> The hash table of approximately 30,000 images was saved to a pickle file (530 MB). Parameters for feature extraction were also saved (90 MB) to be used later.

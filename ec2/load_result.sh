@@ -3,7 +3,7 @@ set -e
 i=0
 public_bucket="image-search-public"
 private_bucket="image-search-repository"
-manifest="image-search.out"
+manifest="image_search.out"
 
 while read line
 do

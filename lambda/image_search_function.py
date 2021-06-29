@@ -9,10 +9,10 @@ KEY_DEST = "/tmp/keyname.pem"
 # host=event['IP']
 # host='ec2-34-230-51-97.compute-1.amazonaws.com'
 # host='ec2-18-209-112-165.compute-1.amazonaws.com'
-HOST = ""
+HOST = "3.94.4.188"
 USERNAME = "ec2-user"
 SEARCH_SCRIPT = "image_search_minimal.py"
-OUTPUT = "image-search.out"
+OUTPUT = "image_search.out"
 
 def image_search_handler(event, context):
 
