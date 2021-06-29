@@ -44,7 +44,7 @@ The AWS services used and their connections for creating the application are sho
 ## Visual Search
 My initial approach had been to use SageMaker and run a k-NN algorithm,<sup>4</sup> but I then decided that the application needed to give the user flexibility for choosing *k* without having to retrain the k-NN model. So I kept the portion of a pretrained ResNet-50 model imported from MXNet that performs feature extraction, and fed the extracted features through a locality sensitive hashing (LSH) algorithm.<sup>5,6</sup> The hash table of approximately 30,000 images was saved to a pickle file (530 MB). Parameters for feature extraction were also saved (90 MB) to be used later.
 
-The hash table, feature extraction parameters, and ![Python script](ec2/image_search_minimal.py) that extracts features from an input image and queries the hash table, were uploaded to the EC2 instance, which was used by the Lambda function to perform the search.
+The hash table, feature extraction parameters, and [Python script](ec2/image_search_minimal.py) that extracts features from an input image and queries the hash table, were uploaded to the EC2 instance, which was used by the Lambda function to perform the search.
 
 ## Performance
 The Lambda run time seems dependent on *k*, based on several runs:
@@ -71,7 +71,7 @@ The Python script for executing LSH search does the following:
 The bulk of the 6 seconds is taken up by the first step of loading the hash table into memory. This process could be faster if the hash table were always available in memory.
 
 ### Upload Results
-The variable component in the run time came from the number of similar images that needed to be returned as a result. After executing the Python script for LSH search, the Lambda function proceeds to copy the images with a ![Bash script](ec2/load_result.sh) using aws-cli from a private S3 bucket to the public S3 bucket that hosts the web application. The S3 copy was happening sequentially, so there must be a way to parallelize this to speed up the process.
+The variable component in the run time came from the number of similar images that needed to be returned as a result. After executing the Python script for LSH search, the Lambda function proceeds to copy the images with a [Bash script](ec2/load_result.sh) using aws-cli from a private S3 bucket to the public S3 bucket that hosts the web application. The S3 copy was happening sequentially, so there must be a way to parallelize this to speed up the process.
 
 ### Redesign?
 In general, I would be first to suspect flaws in the architecture design, and would consider options that do not rely on Lambda using an SSH connection to an EC2 instance.
