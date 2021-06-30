@@ -74,28 +74,30 @@ function getHtml(template) {
 // snippet-start:[s3.JavaScript.s3_PhotoViewer.listAlbums]
 // List the photo albums that exist in the bucket.
 function listAlbums() {
-  s3.listObjects({Delimiter: '/', Prefix: 'application/'}, function(err, data) {
+  s3.listObjects({Delimiter: '/'}, function(err, data) {
     if (err) {
       return alert('There was an error listing your albums: ' + err.message);
     } else {
+      console.log(data)
       var albums = data.CommonPrefixes.map(function(commonPrefix) {
+        console.log(commonPrefix)
         var prefix = commonPrefix.Prefix;
-	console.log(commonPrefix)
-	console.log(prefix)
-        //var albumName = decodeURIComponent(prefix.replace('/', ''));
-        var albumName = decodeURIComponent(prefix.split('/')[1]);
-	//console.log(albumName);
-	if (albumName !== "results") {
-          return getHtml([
-            '<li>',
-              '<button style="margin:5px;" onclick="viewAlbum(\'' + albumName + '\')">',
-              //'<button style="margin:5px;" onclick="viewAlbum(\'application/' + albumName + '\')">',
-                albumName,
-              '</button>',
-            '</li>'
-          ]);
-	}
+	      // console.log(prefix)
+        var albumName = decodeURIComponent(prefix.replace('/', ''));
+        // var albumName = decodeURIComponent(prefix.split('/')[1]);
+	      // console.log(albumName);
+      	if (albumName !== "results") {
+                return getHtml([
+                  '<li>',
+                    '<button style="margin:5px;" onclick="viewAlbum(\'' + albumName + '\')">',
+                    //'<button style="margin:5px;" onclick="viewAlbum(\'application/' + albumName + '\')">',
+                      albumName,
+                    '</button>',
+                  '</li>'
+                ]);
+      	}
       });
+      // console.log(albums)
       var message = albums.length ?
         getHtml([
           '<p>Click on an album name to view it.</p>',
@@ -128,10 +130,13 @@ function invokeLambda(lambdaParams) {
 }
 
 async function viewClosest(photoInputUrl, k, albumName) {
+  console.log(photoInputUrl)
   var photoInputName = photoInputUrl.split('%2F')[1]
+  // var photoInputName = photoInputUrl.split('/')[1]
   var photoInputRoot = photoInputName.split('.')[0];
   // launch lambda function to ssh into ec2
   // Call the Lambda function to collect the spin results
+  console.log(photoInputName)
   var lambdaParams = {
     FunctionName : 'image_search_function',
     InvocationType : 'RequestResponse',
@@ -167,6 +172,7 @@ async function viewClosest(photoInputUrl, k, albumName) {
     var bucketUrl = href + albumBucketName + '/';
 
     var photos = data.Contents.map(function(photo) {
+      console.log(photo)
       var photoKey = photo.Key;
       var photoUrl = bucketUrl + encodeURIComponent(photoKey);
       //console.log(photoKey);
@@ -194,22 +200,22 @@ async function viewClosest(photoInputUrl, k, albumName) {
             'Back To ' + albumName,
           '</button>',
         '</div>',
-      '<p>Showing ' + k + ' closest photo(s).<\p>',
-      '<span>',
-        '<div>',
-          '<br/>',
-          '<img style="width:128px;height:128px;" src="' + photoInputUrl + '"/>',
+        '<p>Showing ' + k + ' closest photo(s).<\p>',
+        '<span>',
           '<div>',
-            '<span>',
-              photoInputUrl.split('/')[4].replace('%2F','/'),
-            '</span>',
+            '<br/>',
+            '<img style="width:128px;height:128px;" src="' + photoInputUrl + '"/>',
+            '<div>',
+              '<span>',
+                photoInputUrl.split('/')[4].replace('%2F','/'),
+              '</span>',
+            '</div>',
           '</div>',
-        '</div>',
-      '</span>',
+        '</span>',
         '<div>',
           getHtml(photos),
         '</div>',
-	'<div style="clear:both;"></div>',
+	      '<div style="clear:both;"></div>',
         '<div>',
           '<button onclick="listAlbums()">',
             'Back To Albums',
@@ -246,28 +252,31 @@ function getUrlByFileName(fileName,mimeType) {
 
 const functionWithPromise = item => { return Promise.resolve(item) }
 
-function getAndEncode(photo) {
+function getAndEncode(photo, bucketUrl) {
   return new Promise( function(resolve, reject) { 
     var photoKey = photo.Key;
     s3.getObject({Key: photoKey},function(err,file){ 
       if (err) {
         return alert('There was an error retrieving image: ' + err.message);
       }
-      var photoUrl = 'data:image/jpg;base64,' +  encode(file.Body);
+      var photoUrl = bucketUrl + encodeURIComponent(photoKey);
+      var photoInputUrl = 'data:image/jpg;base64,' +  encode(file.Body);
       var photoHtml =  getHtml([
          '<span>',
            '<div>',
              '<br/>',
-             //'<button class="search" name="' + photoUrl + '" >',
-             '<button class="search" name="image" >',
-             '<img style="width:128px;height:128px;" src="' + photoUrl + '"/>',
+             '<button class="search" name="' + photoUrl + '" >',
+             // '<button class="search" name="image" >',
+             '<img style="width:128px;height:128px;" src="' + photoInputUrl + '"/>',
              '</button>',
            '</div>',
-//           '<div>',
-//             '<span>',
-//               photoKey.replace(albumPhotosKey, ''),
-//             '</span>',
-//           '</div>',
+          '<div>',
+            '<span>',
+              // photoKey.replace(photoKey, ''),
+              // photoKey.split('/').slice(2,4).join('/'),
+              photoKey.split('/')[1],
+            '</span>',
+          '</div>',
          '</span>',
        ]);
 //       var photoHtml = '<span>\n<div>\n<br/>\n<button class="search" name="image" >\n<img style="width:128px;height:128px;" src="' + photoUrl + '"/>\n</button>\n</div>\n</span>'
@@ -277,7 +286,7 @@ function getAndEncode(photo) {
 };
 
 var async_map = async function(data, albumName){
-  //console.log(data.Contents);
+  console.log(data.Contents);
   //var photos = await data.Contents.map(getAndEncode(photo))
   var photos = Promise.all(data.Contents.map(async function(photo){ getAndEncode(photo); }))
   //console.log(photos);
@@ -327,9 +336,9 @@ var async_map = async function(data, albumName){
 // Show the photos that exist in an album.
 function viewAlbum(albumName) {
   //var albumPhotosKey = encodeURIComponent(albumName) + '/_';
-  //var albumPhotosKey = encodeURIComponent(albumName) + '/';
-  var albumPhotosKey = 'application/' + encodeURIComponent(albumName) + '/';
-  //console.log(albumPhotosKey);
+  var albumPhotosKey = encodeURIComponent(albumName) + '/';
+  // var albumPhotosKey = 'application/' + encodeURIComponent(albumName) + '/';
+  console.log(albumPhotosKey);
   s3.listObjects({Prefix: albumPhotosKey}, async function(err, data) {
     if (err) {
       return alert('There was an error viewing your album: ' + err.message);
@@ -337,14 +346,14 @@ function viewAlbum(albumName) {
     // 'this' references the AWS.Response instance that represents the response
     var href = this.request.httpRequest.endpoint.href;
     var bucketUrl = href + albumBucketName + '/';
-    console.log(bucketUrl);
-    console.log(albumPhotosKey);
-//    console.log(data.Contents);
+    // console.log(bucketUrl);
+    // console.log(albumPhotosKey);
+    console.log(data.Contents);
 //    var photos = await data.Contents.map(getAndEncode(photo))
   //  async_map(data, albumName).then(item => { console.log(item) }); 
-  var photos_tmp = data.Contents.map(async photo => getAndEncode(photo))
+  var photos_tmp = data.Contents.map(async photo => getAndEncode(photo, bucketUrl))
   Promise.all(photos_tmp).then( function(photos) {
-  console.log(photos);
+  // console.log(photos);
   var message = photos.length ?
     '<p>The following photos are present.</p>' :
     '<p>There are no photos in this album.</p>';
