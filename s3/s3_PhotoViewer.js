@@ -36,7 +36,7 @@
 // **DO THIS**:
 //   Replace BUCKET_NAME with the bucket name.
 //
-var albumBucketName = 'iamge-search-public';
+var albumBucketName = 'image-search-public';
 
 // **DO THIS**:
 //   Replace this block of code with the sample code located at:
