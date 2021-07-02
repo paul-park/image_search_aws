@@ -47,13 +47,19 @@ def image_search_handler(event, context):
         # "conda activate mxnet && python " + SEARCH_SCRIPT + " download/" + photo_name + " " + k,
         "./load_result.sh"
         ]
+    stdout_list = []
+    stderr_list = []
     for i, command in enumerate(commands):
         s = time.time()
         print "Executing {}".format(command)
         stdin , stdout, stderr = c.exec_command(command)
-        print stdout.read()
-        print stderr.read()
+        stdout_read = stdout.read()
+        stderr_read = stderr.read()
+        print stdout_read
+        print stderr_read
+        stdout_list.append(stdout_read)
+        stderr_list.append(stderr_read)
         print('{0:.3f}s elapsed'.format(time.time()-s))
 
-#    return {'album' : "results/"}
-    return {'photo_key' : stdout}
+    return {'album' : "results/", "stdout": stdout_list, "stderr": stderr_list}
+    # return {'photo_key' : stdout}

@@ -161,6 +161,7 @@ async function viewClosest(photoInputUrl, k, albumName) {
   //console.log(albumInputName);
 //  var albumName = 'results';
   //var albumPhotosKey = encodeURIComponent(albumName) + '/';
+  console.log(lambdaResults)
   var albumPhotosKey = albumInputName+photoInputRoot;
   s3.listObjects({Prefix: albumPhotosKey}, function(err, data) {
     if (err) {
