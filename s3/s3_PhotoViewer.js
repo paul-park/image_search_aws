@@ -238,19 +238,6 @@ function encode(data) {
   return btoa(str).replace(/.{76}(?=.)/g,'$&\n');
 }
 
-// function getUrlByFileName(fileName,mimeType) {
-//   return new Promise(
-//       function (resolve, reject) {
-//           bucket.getObject({Key: fileName}, function (err, file) {
-//               var result =  mimeType + encode(file.Body);
-//               resolve(result)
-//           });
-//       }
-//   );
-// }
-
-// const functionWithPromise = item => { return Promise.resolve(item) }
-
 function getAndEncode(photo, bucketUrl) {
   return new Promise( function(resolve, reject) { 
     var photoKey = photo.Key;
@@ -280,53 +267,6 @@ function getAndEncode(photo, bucketUrl) {
     })
   });
 }
-
-// var async_map = async function(data, albumName){
-//   console.log(data.Contents);
-//   //var photos = await data.Contents.map(getAndEncode(photo))
-//   var photos = Promise.all(data.Contents.map(async function(photo){ getAndEncode(photo); }))
-//   //console.log(photos);
-//   var message = photos.length ?
-//     '<p>The following photos are present.</p>' :
-//     '<p>There are no photos in this album.</p>';
-//   var htmlTemplate = [
-//     '<div>',
-//       '<button onclick="listAlbums()">',
-//         'Back To Albums',
-//       '</button>',
-//     '</div>',
-//     '<h2>',
-//       'Album: ' + albumName,
-//     '</h2>',
-//     message,
-//     'Click to find k closest photo(s). k=',
-//     '<select id="k">',
-//     '</select>',
-//     '<div>',
-//       getHtml(photos),
-//     '</div>',
-//     '<h2>',
-//       'End of Album: ' + albumName,
-//     '</h2>',
-//     '<div>',
-//       '<button onclick="listAlbums()">',
-//         'Back To Albums',
-//       '</button>',
-//     '</div>',
-//   ]
-//   document.getElementById('viewer').innerHTML = getHtml(htmlTemplate);
-//   for(var i=1; i<=10; i++){
-//     var select = document.getElementById("k");
-//     var option = document.createElement("OPTION");
-//     select.options.add(option);
-//     option.text = i;
-//     option.value = i;
-//   }
-//   var select = document.getElementById("k");
-//   var button = document.querySelectorAll(".search");
-//   button.forEach(item => item.addEventListener("click", () => { //console.log(item.type); 
-//                                                                   viewClosest(item.name, select.value, albumName); }));
-// }
 
 // snippet-start:[s3.JavaScript.s3_PhotoViewer.viewAlbum]
 // Show the photos that exist in an album.
