@@ -4,13 +4,13 @@
 Using various AWS services, I built a [JavaScript web application hosted on S3](http://image-search-public.s3-website-us-east-1.amazonaws.com/) to perform search of an image and return *k* most similar images from a set of approximately 30,000 images. This implementation relies on an EC2 instance that a Lambda function connects to, which is triggered by the Javascript application. If the EC2 instance is not up and running, the web page will be unresponsive.
 
 ## Walk-Through
-The homepage lists a set of albums containing images grouped by type from which to pick the image for visual search.<sup>1</sup>
+The homepage lists a set of albums containing images grouped by type from which to pick the image for image search.<sup>1</sup>
 
 | ![home.jpg](images/home.png) | 
 |:--:| 
 | *Home* |
 
-Selecting an album (e.g. marble) will render a page with images that belong in the selected album. The user can then select the number of desired similar images (i.e. *k*) from a drop-down menu and then select the image on which to perform visual search. The values of *k* that are allowed range from 1 to 10.
+Selecting an album (e.g. marble) will render a page with images that belong in the selected album. The user can then select the number of desired similar images (i.e. *k*) from a drop-down menu and then select the image on which to perform image search. The values of *k* that are allowed range from 1 to 10.
 
 | ![album.jpg](images/album.png) | 
 |:--:| 
@@ -19,7 +19,7 @@ Selecting an album (e.g. marble) will render a page with images that belong in t
 Once *k* (e.g. 5) is chosen, selecting an image (e.g. MYPDF.jpg) invokes a Lambda function, which performs the following actions:
 
 - Log into an EC2 instance
-- Execute a Python script for visual search, which returns a list of paths for similar images in another private bucket
+- Execute a Python script for image search, which returns a list of paths for similar images in another private bucket
 - Execute a bash script to copy similar images from the private bucket to the public bucket
 - Return with location of copied images, which JavaScript uses to present similar images
 
@@ -97,7 +97,7 @@ The policy for the Lambda service role is much more specific than that of the EC
 }
 ```
 
-## Visual Search
+## Image Search
 My initial approach had been to use SageMaker and run a k-NN algorithm,<sup>4</sup> but I then decided that the application needed to give the user flexibility for choosing *k* without having to retrain the k-NN model. So I kept the portion of a pretrained ResNet-50 model imported from MXNet that performs feature extraction, and fed the extracted features through a locality sensitive hashing (LSH) algorithm.<sup>5,6</sup> The hash table of approximately 30,000 images was saved to a pickle file (530 MB). Parameters for feature extraction were also saved (90 MB) to be used later.
 
 The hash table, feature extraction parameters, and [Python script](ec2/image_search_minimal.py) that extracts features from an input image and queries the hash table, were uploaded to the EC2 instance, which was used by the Lambda function to perform the search.
